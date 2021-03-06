@@ -11,6 +11,7 @@ object Dependencies {
     val ciris         = "1.2.1"
     val googleOath    = "1.31.2"
     val javaxCrypto   = "1.0.1"
+    val flyway        = "7.6.0"
     val fs2           = "2.4.5"
     val http4s        = "0.21.9"
     val http4sJwtAuth = "0.0.5"
@@ -36,6 +37,7 @@ object Dependencies {
     def http4s(artifact: String): ModuleID = "org.http4s" %% artifact % Versions.http4s
 
     val googleOAuth = "com.google.api-client" % "google-api-client" % Versions.googleOath
+    val flyway = "org.flywaydb" % "flyway-core" % Versions.flyway
 
     val cats        = "org.typelevel"    %% "cats-core"     % Versions.cats
     val catsMeowMtl = "com.olegpy"       %% "meow-mtl-core" % Versions.catsMeowMtl

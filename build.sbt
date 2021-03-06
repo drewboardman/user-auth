@@ -58,6 +58,7 @@ lazy val core = (project in file("modules/core"))
       Libraries.cirisCore,
       Libraries.cirisEnum,
       Libraries.cirisRefined,
+      Libraries.flyway,
       Libraries.fs2,
       Libraries.googleOAuth,
       Libraries.http4sDsl,
