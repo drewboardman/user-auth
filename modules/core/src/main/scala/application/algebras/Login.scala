@@ -1,33 +1,42 @@
 package application.algebras
 
-import application.domain.Auth.{ LoginUser, UserId, UserName }
+import application.domain.Auth._
 import application.domain.GoogleTokenAuthModels.GoogleTokenString
 import application.effects.CommonEffects.MonadThrow
 import cats.Functor
 import cats.implicits._
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload
 
 trait Login[F[_]] {
-  def verifyIdToken(rawToken: GoogleTokenString): F[LoginUser]
+  def login(rawToken: GoogleTokenString): F[LoginResult]
 }
 
 object LiveLogin {
-  def make[F[_]: Functor: MonadThrow](tokenVerifier: GoogleVerificationWrapper) = new LiveLogin[F](tokenVerifier)
+  def make[F[_]: Functor: MonadThrow](
+      tokenVerifier: GoogleVerificationWrapper[F],
+      dbReader: DbReader[F],
+      dbWriter: DbWriter[F]
+  ) = new LiveLogin[F](tokenVerifier, dbReader, dbWriter)
 }
 
 final class LiveLogin[F[_]: Functor: MonadThrow] private (
-    tokenVerifier: GoogleVerificationWrapper
+    tokenVerifier: GoogleVerificationWrapper[F],
+    dbReader: DbReader[F],
+    dbWriter: DbWriter[F]
 ) extends Login[F] {
-  override def verifyIdToken(rawToken: GoogleTokenString): F[LoginUser] =
-    MonadThrow[F]
-      .fromEither(tokenVerifier.verify(rawToken))
-      .map { googleIdToken =>
-        val payload: Payload = googleIdToken.getPayload
-        // do i care about the expiration at all?
-        // need to use the Header.jwk stuff I think
-        LoginUser(
-          UserId(payload.getSubject),
-          UserName(payload.get("name").asInstanceOf[String])
-        )
-      }
+  override def login(rawToken: GoogleTokenString): F[LoginResult] =
+    // TODO: figure out a way to ask new users for more login information like username
+    for {
+      token <- tokenVerifier.verify(rawToken)
+      payload = token.getPayload
+      googleUserId <- tokenVerifier.getGoogleUserId(payload)
+      email <- tokenVerifier.getEmail(payload)
+      // TODO: check the header for jwk also
+      result <- createOrReturnCurrentUser(googleUserId, email)
+    } yield result
+
+  private def createOrReturnCurrentUser(googleUserId: GoogleUserId, email: Email): F[LoginResult] =
+    dbReader.getUserByGoogleUserId(googleUserId).flatMap {
+      case Some(user) => (SuccessfulLogin(user): LoginResult).pure[F]
+      case None       => dbWriter.createNewUser(googleUserId, email)
+    }
 }
