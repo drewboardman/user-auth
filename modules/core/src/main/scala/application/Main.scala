@@ -1,6 +1,6 @@
 package application
 
-import application.algebras.{ LiveGoogleVerificationWrapper, LiveLogin }
+import application.algebras.{ LiveDbReader, LiveDbWriter, LiveGoogleVerificationWrapper, LiveLogin }
 import cats.effect.{ ExitCode, IO, IOApp }
 import cats.implicits._
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
@@ -15,7 +15,9 @@ object Main extends IOApp {
         AppResources.make[IO](cfg).use { resources =>
           for {
             verifier <- LiveGoogleVerificationWrapper.make[IO]
-            login <- LiveLogin.make[IO](verifier)
+            dbReader <- LiveDbReader.make[IO](resources.psql)
+            dbWriter <- LiveDbWriter.make[IO](resources.psql)
+            login <- LiveLogin.make[IO](verifier, dbReader, dbWriter)
           } yield ExitCode.Success
         }
     }
