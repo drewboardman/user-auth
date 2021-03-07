@@ -1,6 +1,6 @@
 package application.algebras
 
-import application.domain.Auth.{ Email, GoogleUserId, TokenVerificationError }
+import application.domain.Auth.{ Email, GoogleTokenVerificationError, GoogleUserId }
 import application.domain.GoogleTokenAuthModels.GoogleTokenString
 import application.effects.CommonEffects.MonadThrow
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload
@@ -36,12 +36,12 @@ final class LiveGoogleVerificationWrapper[F[_]: MonadThrow] extends GoogleVerifi
     } match {
       case Success(value) =>
         if (value == null) {
-          Left(TokenVerificationError("Token verification failed."))
+          Left(GoogleTokenVerificationError("Token verification failed."))
         } else {
           Right(value)
         }
       case Failure(err)   =>
-        Left(TokenVerificationError(s"Exception thrown during token verification process: ${err}"))
+        Left(GoogleTokenVerificationError(s"Exception thrown during token verification process: ${err}"))
     }
 
     MonadThrow[F].fromEither(res)
@@ -52,7 +52,9 @@ final class LiveGoogleVerificationWrapper[F[_]: MonadThrow] extends GoogleVerifi
     val res     = if (subject == null) {
       Right(GoogleUserId(subject))
     } else {
-      Left(TokenVerificationError("payload.getSubject failed. Google token payload contained null google userId."))
+      Left(
+        GoogleTokenVerificationError("payload.getSubject failed. Google token payload contained null google userId.")
+      )
     }
 
     MonadThrow[F].fromEither(res)
@@ -63,7 +65,7 @@ final class LiveGoogleVerificationWrapper[F[_]: MonadThrow] extends GoogleVerifi
     val res   = if (email == null) {
       Right(Email(email))
     } else {
-      Left(TokenVerificationError("payload.getEmail failed. Google token payload contained null email."))
+      Left(GoogleTokenVerificationError("payload.getEmail failed. Google token payload contained null email."))
     }
 
     MonadThrow[F].fromEither(res)

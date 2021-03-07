@@ -23,7 +23,6 @@ object Auth {
   case class UserDoesNotExist(googleUserId: GoogleUserId) extends LoginResult
 
   sealed trait LoginError extends NoStackTrace
-  case class TokenVerificationError(message: String) extends LoginError
-  case object TokenExpiredError extends LoginError
+  case class GoogleTokenVerificationError(message: String) extends LoginError
   case class UserNameInUse(googleUserId: GoogleUserId) extends LoginError
 }
