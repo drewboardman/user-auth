@@ -1,24 +1,36 @@
 package application
 
 import application.algebras.{ LiveDbReader, LiveDbWriter, LiveGoogleVerificationWrapper, LiveLogin }
-import cats.effect.{ ExitCode, IO, IOApp }
+import application.http.HttpApi
+import cats.effect._
 import cats.implicits._
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import io.chrisdavenport.log4cats.{ Logger, SelfAwareStructuredLogger }
+import org.http4s.server.blaze.BlazeServerBuilder
+
+import scala.concurrent.ExecutionContext
 
 object Main extends IOApp {
   implicit val logger: SelfAwareStructuredLogger[IO] = Slf4jLogger.getLogger[IO]
 
   override def run(args: List[String]): IO[ExitCode] =
     config.loader[IO].flatMap { cfg =>
+      val ex = ExecutionContext.global
       Logger[IO].info(s"Loaded config $cfg") >>
         AppResources.make[IO](cfg).use { resources =>
-          for {
-            verifier <- LiveGoogleVerificationWrapper.make[IO]
-            dbReader <- LiveDbReader.make[IO](resources.psql)
-            dbWriter <- LiveDbWriter.make[IO](resources.psql)
-            login <- LiveLogin.make[IO](verifier, dbReader, dbWriter)
-          } yield ExitCode.Success
+          val verifier = LiveGoogleVerificationWrapper.make[IO]
+          val dbReader = LiveDbReader.make[IO](resources.psql)
+          val dbWriter = LiveDbWriter.make[IO](resources.psql)
+          val login    = LiveLogin.make[IO](verifier, dbReader, dbWriter)
+          val api      = HttpApi.make[IO](login)
+
+          BlazeServerBuilder[IO](ex)
+            .bindHttp(cfg.httpServerConfig.port.value, cfg.httpServerConfig.host.value)
+            .withHttpApp(api.httpApp)
+            .serve
+            .compile
+            .drain
+            .as(ExitCode.Success) // maybe needs to be map?
         }
     }
 }

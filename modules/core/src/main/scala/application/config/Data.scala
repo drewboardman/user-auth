@@ -9,7 +9,13 @@ object Data {
   @newtype case class RedisConfig(uri: RedisURI)
 
   case class AppConfig(
-      postgreSQL: PostgreSQLConfig
+      postgreSQL: PostgreSQLConfig,
+      httpServerConfig: HttpServerConfig
+  )
+
+  case class HttpServerConfig(
+      host: NonEmptyString,
+      port: UserPortNumber
   )
 
   case class PostgreSQLConfig(

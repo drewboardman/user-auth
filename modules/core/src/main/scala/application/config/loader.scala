@@ -1,6 +1,6 @@
 package application.config
 
-import application.config.Data.{ AppConfig, PostgreSQLConfig }
+import application.config.Data.{ AppConfig, HttpServerConfig, PostgreSQLConfig }
 import cats.effect._
 import cats.syntax.all._
 import ciris._
@@ -20,10 +20,13 @@ object loader {
     env("PSQL_USER").as[NonEmptyString].default(NonEmptyString.unsafeFrom("postgres")),
     env("PSQL_PASSWORD").as[NonEmptyString].default(NonEmptyString.unsafeFrom("postgres")),
     env("PSQL_DATABASE").as[NonEmptyString].default(NonEmptyString.unsafeFrom("user-auth")),
-    env("PSQL_MAX_CONNECTIONS").as[PosInt].default(PosInt.unsafeFrom(10))
-  ).parMapN { (host, port, user, pass, db, max) =>
+    env("PSQL_MAX_CONNECTIONS").as[PosInt].default(PosInt.unsafeFrom(10)),
+    env("HTTP_SERVER_HOST").as[NonEmptyString].default(NonEmptyString.unsafeFrom("0.0.0.0")),
+    env("HTTP_SERVER_PORT").as[UserPortNumber].default(UserPortNumber.unsafeFrom(8080))
+  ).parMapN { (psqlHost, psqlPort, user, pass, db, max, serverHost, serverPort) =>
     AppConfig(
-      PostgreSQLConfig(host, port, user, pass, db, max)
+      PostgreSQLConfig(psqlHost, psqlPort, user, pass, db, max),
+      HttpServerConfig(serverHost, serverPort)
     )
   }
 }

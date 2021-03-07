@@ -13,7 +13,6 @@ final case class AppResources[F[_]](
 object AppResources {
   def make[F[_]: ConcurrentEffect: ContextShift: Logger](
       cfg: AppConfig
-//    ex: ExecutionContext
   ): Resource[F, AppResources[F]] =
     for {
       psql <- mkPostgreSQLResource(cfg.postgreSQL)
