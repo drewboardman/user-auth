@@ -20,7 +20,7 @@ object Auth {
   sealed trait LoginResult
   case class UserCreated(user: LoginUser) extends LoginResult
   case class SuccessfulLogin(user: LoginUser) extends LoginResult
-  case class FailedLogin(user: LoginUser) extends LoginResult
+  case class UserDoesNotExist(googleUserId: GoogleUserId) extends LoginResult
 
   sealed trait LoginError extends NoStackTrace
   case class TokenVerificationError(message: String) extends LoginError

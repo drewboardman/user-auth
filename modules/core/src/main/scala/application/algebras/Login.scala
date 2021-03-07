@@ -8,6 +8,7 @@ import cats.implicits._
 
 trait Login[F[_]] {
   def login(rawToken: GoogleTokenString): F[LoginResult]
+  def create(rawToken: GoogleTokenString): F[LoginResult]
 }
 
 object LiveLogin {
@@ -24,19 +25,26 @@ final class LiveLogin[F[_]: Functor: MonadThrow] private (
     dbWriter: DbWriter[F]
 ) extends Login[F] {
   override def login(rawToken: GoogleTokenString): F[LoginResult] =
-    // TODO: figure out a way to ask new users for more login information like username
+    for {
+      (id, _) <- checkToken(rawToken)
+      maybeUser <- dbReader.getUserByGoogleUserId(id)
+    } yield (id, maybeUser) match {
+      case (_, Some(user)) => SuccessfulLogin(user)
+      case (id, None)      => UserDoesNotExist(id)
+    }
+
+  override def create(rawToken: GoogleTokenString): F[LoginResult] =
+    for {
+      (id, email) <- checkToken(rawToken)
+      user <- dbWriter.createNewUser(id, email)
+    } yield user
+
+  private def checkToken(rawToken: GoogleTokenString): F[(GoogleUserId, Email)] =
     for {
       token <- tokenVerifier.verify(rawToken)
       payload = token.getPayload
       googleUserId <- tokenVerifier.getGoogleUserId(payload)
       email <- tokenVerifier.getEmail(payload)
       // TODO: check the header for jwk also
-      result <- createOrReturnCurrentUser(googleUserId, email)
-    } yield result
-
-  private def createOrReturnCurrentUser(googleUserId: GoogleUserId, email: Email): F[LoginResult] =
-    dbReader.getUserByGoogleUserId(googleUserId).flatMap {
-      case Some(user) => (SuccessfulLogin(user): LoginResult).pure[F]
-      case None       => dbWriter.createNewUser(googleUserId, email)
-    }
+    } yield (googleUserId, email)
 }
