@@ -24,14 +24,17 @@ final class LiveLogin[F[_]: Functor: MonadThrow] private (
     dbReader: DbReader[F],
     dbWriter: DbWriter[F]
 ) extends Login[F] {
-  override def login(rawToken: GoogleTokenString): F[LoginResult] =
-    for {
+  override def login(rawToken: GoogleTokenString): F[LoginResult] = {
+    val res: F[Either[LoginError, LoginResult]] = for {
       (id, _) <- checkToken(rawToken)
       maybeUser <- dbReader.getUserByGoogleUserId(id)
     } yield (id, maybeUser) match {
-      case (_, Some(user)) => SuccessfulLogin(user)
-      case (id, None)      => UserDoesNotExist(id)
+      case (_, Some(user)) => Right(SuccessfulLogin(user))
+      case (id, None)      => Left(UserDoesNotExist(id))
     }
+
+    res.rethrow
+  }
 
   override def create(rawToken: GoogleTokenString): F[LoginResult] =
     for {

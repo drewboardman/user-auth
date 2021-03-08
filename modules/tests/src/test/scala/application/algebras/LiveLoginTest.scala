@@ -84,8 +84,10 @@ class LiveLoginTest extends PureTestSuite {
           val login    = LiveLogin.make(verifier, dbReader, dbWriter)
           login
             .login(googleTokenString)
-            .map { result =>
-              assert(result == UserDoesNotExist(googleUserId))
+            .attempt
+            .map {
+              case Left(err) => assert(err == UserDoesNotExist(googleUserId))
+              case Right(_)  => fail("expected UserDoesNotExist")
             }
         }
     }

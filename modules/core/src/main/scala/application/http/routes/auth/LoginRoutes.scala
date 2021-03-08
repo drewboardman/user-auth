@@ -1,7 +1,13 @@
 package application.http.routes.auth
 
 import application.algebras.Login
-import application.domain.Auth.{ GoogleTokenVerificationError, GoogleUserIdAlreadyExists, SuccessfulLogin, UserCreated }
+import application.domain.Auth.{
+  GoogleTokenVerificationError,
+  GoogleUserIdAlreadyExists,
+  LoginError,
+  SuccessfulLogin,
+  UserCreated
+}
 import application.domain.GoogleTokenAuthModels.GoogleTokenString
 import application.effects.CommonEffects.MonadThrow
 import cats.Defer
@@ -28,7 +34,7 @@ final class LoginRoutes[F[_]: Defer: JsonDecoder: MonadThrow](
           case _                  => BadRequest()
         }
         .recoverWith {
-          case GoogleTokenVerificationError(_) => Forbidden()
+          case _: LoginError => Forbidden()
         }
 
     case req @ POST -> Root / "createUser" =>
