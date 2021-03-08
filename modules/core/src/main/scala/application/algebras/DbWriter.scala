@@ -1,7 +1,15 @@
 package application.algebras
 
 import application.algebras.DbWriterQueries.insertUser
-import application.domain.Auth.{ Email, GoogleUserId, LoginResult, LoginUser, UserCreated, UserId, UserNameInUse }
+import application.domain.Auth.{
+  Email,
+  GoogleUserId,
+  GoogleUserIdAlreadyExists,
+  LoginResult,
+  LoginUser,
+  UserCreated,
+  UserId
+}
 import application.effects.CommonEffects.ApThrow
 import application.effects.GenUUID
 import application.util.sharedcodecs.loginUserCodec
@@ -35,7 +43,7 @@ final class LiveDbWriter[F[_]: Sync: GenUUID: ApThrow] private (
         res
           .handleErrorWith {
             case SqlState.UniqueViolation(_) =>
-              UserNameInUse(googleUserId).raiseError[F, LoginResult]
+              GoogleUserIdAlreadyExists(googleUserId).raiseError[F, LoginResult]
           }
       }
     }

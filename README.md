@@ -17,6 +17,7 @@ this session information via the JWT.
 TODO
 ----
 * add refresh token stuff
+* add extra user table columns?
 * need to add encrypted client identifier and decryption
   - this is used to verify google oauth tokens
   - i don't think it can be encrypted on the client though

@@ -20,9 +20,9 @@ object Auth {
   sealed trait LoginResult
   case class UserCreated(user: LoginUser) extends LoginResult
   case class SuccessfulLogin(user: LoginUser) extends LoginResult
-  case class UserDoesNotExist(googleUserId: GoogleUserId) extends LoginResult
+  case class UserDoesNotExist(googleUserId: GoogleUserId) extends LoginResult // make this an error
 
   sealed trait LoginError extends NoStackTrace
   case class GoogleTokenVerificationError(message: String) extends LoginError
-  case class UserNameInUse(googleUserId: GoogleUserId) extends LoginError
+  case class GoogleUserIdAlreadyExists(googleUserId: GoogleUserId) extends LoginError
 }

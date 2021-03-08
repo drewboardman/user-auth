@@ -30,6 +30,11 @@ class LiveLoginTest extends PureTestSuite {
     override def getUserByGoogleUserId(googleUserId: GoogleUserId): IO[Option[LoginUser]] = IO.pure(None)
   }
 
+  val failWriter: TestDbWriter = new TestDbWriter {
+    override def createNewUser(googleUserId: GoogleUserId, email: Email): IO[LoginResult] =
+      IO.raiseError(GoogleUserIdAlreadyExists(googleUserId))
+  }
+
   val failVerifier: TestGoogleVerification = new TestGoogleVerification {
     override def verify(idToken: GoogleTokenString): IO[GoogleIdToken] =
       IO.raiseError(GoogleTokenVerificationError("test"))
@@ -40,6 +45,7 @@ class LiveLoginTest extends PureTestSuite {
       override def createNewUser(googleUserId: GoogleUserId, email: Email): IO[LoginResult] = IO.pure(loginResult)
     }
 
+  // ------------ login ------------------
   test("successful login") {
     forAll {
       (
@@ -100,6 +106,55 @@ class LiveLoginTest extends PureTestSuite {
             case Right(_)  => fail("expected google verification failure")
           }
       }
+    }
+  }
+
+  // ------------- create new user ------------------
+  test("successful user creation") {
+    forAll {
+      (
+          googleIdToken: GoogleIdToken,
+          loginUser: LoginUser,
+          googleTokenString: GoogleTokenString,
+          email: Email,
+          googleUserId: GoogleUserId
+      ) =>
+        IOAssertion {
+          val verifier = dataGoogleVerification(googleIdToken, email, googleUserId)
+          val dbReader = new TestDbReader
+          val created  = UserCreated(loginUser)
+          val dbWriter = dataDbWriter(created)
+          val login    = LiveLogin.make(verifier, dbReader, dbWriter)
+          login
+            .create(googleTokenString)
+            .map { result =>
+              assert(result == created)
+            }
+        }
+    }
+  }
+
+  test("user already exists") {
+    forAll {
+      (
+          googleIdToken: GoogleIdToken,
+          googleTokenString: GoogleTokenString,
+          email: Email,
+          googleUserId: GoogleUserId
+      ) =>
+        IOAssertion {
+          val verifier = dataGoogleVerification(googleIdToken, email, googleUserId)
+          val dbWriter = failWriter
+          val dbReader = new TestDbReader
+          val login    = LiveLogin.make(verifier, dbReader, dbWriter)
+          login
+            .create(googleTokenString)
+            .attempt
+            .map {
+              case Left(err) => assert(err == GoogleUserIdAlreadyExists(googleUserId))
+              case Right(_)  => fail("expected google user id to already exist error.")
+            }
+        }
     }
   }
 }
