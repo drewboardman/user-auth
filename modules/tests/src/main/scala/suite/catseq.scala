@@ -1,4 +1,4 @@
-package application.suite
+package suite
 
 import cats.Eq
 import org.scalactic._

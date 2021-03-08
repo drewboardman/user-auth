@@ -1,10 +1,10 @@
-package application.suite
+package suite
 
 import cats.effect.IO
 import io.circe.Encoder
 import io.circe.syntax.EncoderOps
 import org.http4s.circe._
-import org.http4s.{HttpRoutes, Request, Status}
+import org.http4s.{ HttpRoutes, Request, Status }
 import org.scalatest.Assertion
 
 import scala.util.control.NoStackTrace

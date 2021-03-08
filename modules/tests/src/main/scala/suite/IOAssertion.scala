@@ -1,4 +1,4 @@
-package application.suite
+package suite
 
 import cats.effect.IO
 
