@@ -17,7 +17,7 @@ object Auth {
       email: Email
   )
 
-  sealed trait LoginResult
+  sealed trait LoginResult { def user: LoginUser }
   case class UserCreated(user: LoginUser) extends LoginResult
   case class SuccessfulLogin(user: LoginUser) extends LoginResult
 

@@ -30,7 +30,7 @@ final class LiveDbReader[F[_]: Sync] private (
 
 private object DbReaderQueries {
   val selectUserByGoogleUserId: Query[GoogleUserId, LoginUser] = sql"""
-         SELECT * FROM users_table
+         SELECT * FROM users
          WHERE google_user_id = ${varchar.cimap[GoogleUserId]};
        """.query(loginUserCodec)
 }

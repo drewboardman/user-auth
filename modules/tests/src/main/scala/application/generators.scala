@@ -39,7 +39,7 @@ object generators {
   //---------------- domain ----------------------
   val loginUserGen: Gen[LoginUser] = for {
     userId <- coerceGenUuid[UserId]
-    googleUserId <- coerceGenStringyInt[GoogleUserId]
+    googleUserId <- Gen.resize(25, coerceGenStringyInt[GoogleUserId])
     email <- coerceGenStr[Email]
   } yield LoginUser(userId, googleUserId, email)
 

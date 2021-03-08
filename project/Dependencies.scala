@@ -17,6 +17,7 @@ object Dependencies {
     val http4sJwtAuth = "0.0.5"
     val log4cats      = "1.1.1"
     val newtype       = "0.4.3"
+    val psql          = "42.2.18"
     val refined       = "0.9.17"
     val redis4cats    = "0.10.3"
     val skunk         = "0.0.21"
@@ -68,6 +69,7 @@ object Dependencies {
     val log4cats = "io.chrisdavenport" %% "log4cats-slf4j" % Versions.log4cats
     val newtype  = "io.estatico"       %% "newtype"        % Versions.newtype
 
+    val psql = "org.postgresql" % "postgresql"           % Versions.psql
     val javaxCrypto = "javax.xml.crypto" % "jsr105-api" % Versions.javaxCrypto
 
     val redis4catsEffects  = "dev.profunktor" %% "redis4cats-effects"  % Versions.redis4cats

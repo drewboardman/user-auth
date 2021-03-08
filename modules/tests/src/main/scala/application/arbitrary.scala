@@ -19,5 +19,6 @@ object arbitrary {
   implicit val arbGoogleTokenString: Arbitrary[GoogleTokenString] = Arbitrary(googleTokenStringGen)
   implicit val arbLoginUser: Arbitrary[LoginUser]                 = Arbitrary(loginUserGen)
   implicit val arbEmail: Arbitrary[Email]                         = Arbitrary(coerceGenStr[Email])
-  implicit val arbGoogleUserId: Arbitrary[GoogleUserId]           = Arbitrary(coerceGenStringyInt[GoogleUserId])
+  implicit val arbGoogleUserId: Arbitrary[GoogleUserId]           =
+    Arbitrary(Gen.resize(25, coerceGenStringyInt[GoogleUserId]))
 }

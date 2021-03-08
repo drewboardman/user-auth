@@ -1,0 +1,1 @@
+ALTER TABLE users ALTER COLUMN google_user_id TYPE VARCHAR;

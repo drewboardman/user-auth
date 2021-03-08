@@ -2,6 +2,7 @@ package application
 
 import application.algebras.{ LiveDbReader, LiveDbWriter, LiveGoogleVerificationWrapper, LiveLogin }
 import application.http.HttpApi
+import application.util.migrations
 import cats.effect._
 import cats.implicits._
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
@@ -24,13 +25,15 @@ object Main extends IOApp {
           val login    = LiveLogin.make[IO](verifier, dbReader, dbWriter)
           val api      = HttpApi.make[IO](login)
 
-          BlazeServerBuilder[IO](ex)
-            .bindHttp(cfg.httpServerConfig.port.value, cfg.httpServerConfig.host.value)
-            .withHttpApp(api.httpApp)
-            .serve
-            .compile
-            .drain
-            .as(ExitCode.Success)
+          for {
+            _ <- migrations.migrateDatabase[IO](cfg.postgreSQL)
+            _ <- BlazeServerBuilder[IO](ex)
+                   .bindHttp(cfg.httpServerConfig.port.value, cfg.httpServerConfig.host.value)
+                   .withHttpApp(api.httpApp)
+                   .serve
+                   .compile
+                   .drain
+          } yield ExitCode.Success
         }
     }
 }

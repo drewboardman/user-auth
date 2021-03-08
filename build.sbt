@@ -70,6 +70,7 @@ lazy val core = (project in file("modules/core"))
       Libraries.log4cats,
       Libraries.logback % Runtime,
       Libraries.newtype,
+      Libraries.psql,
       Libraries.redis4catsEffects,
       Libraries.redis4catsLog4cats,
       Libraries.refinedCore,

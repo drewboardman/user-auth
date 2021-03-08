@@ -1,0 +1,11 @@
+PostgreSQL:
+  restart: always
+  image: postgres:12.0-alpine
+  ports:
+    - "5432:5432"
+  environment:
+    - DEBUG=false
+    - POSTGRES_DB=store
+  volumes:
+    - ./local-data:/docker-entrypoint-initdb.d
+    - ./create-db.sql:/docker-entrypoint-initdb.d/create-db.sql

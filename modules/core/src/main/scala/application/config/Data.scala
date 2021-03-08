@@ -26,6 +26,6 @@ object Data {
       database: NonEmptyString,
       max: PosInt
   ) {
-    def jdbcUrl: String = s"jdbc:postgresql://${host}:${port}/${database}?sslmode=require"
+    def jdbcUrl: String = s"jdbc:postgresql://${host}:${port}/${database}"
   }
 }
