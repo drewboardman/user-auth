@@ -93,7 +93,7 @@ class LiveLoginTest extends PureTestSuite {
     }
   }
 
-  test("google token fails to verify") {
+  test("login: google token fails to verify") {
     forAll { (googleTokenString: GoogleTokenString) =>
       IOAssertion {
         val verifier = failVerifier
@@ -157,6 +157,24 @@ class LiveLoginTest extends PureTestSuite {
               case Right(_)  => fail("expected google user id to already exist error.")
             }
         }
+    }
+  }
+
+  test("create: google token fails to verify") {
+    forAll { (googleTokenString: GoogleTokenString) =>
+      IOAssertion {
+        val verifier = failVerifier
+        val dbReader = new TestDbReader
+        val dbWriter = new TestDbWriter
+        val login    = LiveLogin.make(verifier, dbReader, dbWriter)
+        login
+          .create(googleTokenString)
+          .attempt
+          .map {
+            case Left(err) => assert(err == GoogleTokenVerificationError("test"))
+            case Right(_)  => fail("expected google verification failure")
+          }
+      }
     }
   }
 }

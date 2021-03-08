@@ -1,5 +1,6 @@
 package application.http
 
+import application.domain.GoogleTokenAuthModels.GoogleTokenString
 import cats.Applicative
 import io.circe._
 import io.estatico.newtype.Coercible
@@ -23,4 +24,7 @@ private[http] trait JsonCodecs {
   implicit def coercibleKeyEncoder[A: Coercible[B, *], B: KeyEncoder]: KeyEncoder[A] =
     KeyEncoder[B]
       .contramap[A](_.repr.asInstanceOf[B]) // this casting is bc the Scala compiler can't infer the type of repr
+
+  implicit val googleTokenStringCodec: Codec[GoogleTokenString] =
+    Codec.forProduct1(nameA0 = "google_id_token")(GoogleTokenString.apply)(_.value)
 }

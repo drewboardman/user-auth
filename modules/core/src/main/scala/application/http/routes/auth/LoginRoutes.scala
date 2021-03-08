@@ -43,7 +43,7 @@ final class LoginRoutes[F[_]: Defer: JsonDecoder: MonadThrow](
         loginResult <- login.create(token)
       } yield loginResult)
         .flatMap {
-          case UserCreated(_) => Ok() // add a jwt
+          case UserCreated(_) => Created() // add a jwt
           case _              => BadRequest()
         }
         .recoverWith {
