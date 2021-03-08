@@ -26,6 +26,15 @@ class LiveLoginTest extends PureTestSuite {
       override def getUserByGoogleUserId(googleUserId: GoogleUserId): IO[Option[LoginUser]] = IO.pure(Some(loginUser))
     }
 
+  val userDoesNotExistReader: TestDbReader = new TestDbReader {
+    override def getUserByGoogleUserId(googleUserId: GoogleUserId): IO[Option[LoginUser]] = IO.pure(None)
+  }
+
+  val failVerifier: TestGoogleVerification = new TestGoogleVerification {
+    override def verify(idToken: GoogleTokenString): IO[GoogleIdToken] =
+      IO.raiseError(GoogleTokenVerificationError("test"))
+  }
+
   def dataDbWriter(loginResult: LoginResult): TestDbWriter =
     new TestDbWriter {
       override def createNewUser(googleUserId: GoogleUserId, email: Email): IO[LoginResult] = IO.pure(loginResult)
@@ -51,6 +60,46 @@ class LiveLoginTest extends PureTestSuite {
               assert(result == SuccessfulLogin(loginUser))
             }
         }
+    }
+  }
+
+  test("login user does not exist") {
+    forAll {
+      (
+          googleIdToken: GoogleIdToken,
+          googleTokenString: GoogleTokenString,
+          email: Email,
+          googleUserId: GoogleUserId
+      ) =>
+        IOAssertion {
+          val verifier = dataGoogleVerification(googleIdToken, email, googleUserId)
+          val dbReader = userDoesNotExistReader
+          val dbWriter = new TestDbWriter
+          val login    = LiveLogin.make(verifier, dbReader, dbWriter)
+          login
+            .login(googleTokenString)
+            .map { result =>
+              assert(result == UserDoesNotExist(googleUserId))
+            }
+        }
+    }
+  }
+
+  test("google token fails to verify") {
+    forAll { (googleTokenString: GoogleTokenString) =>
+      IOAssertion {
+        val verifier = failVerifier
+        val dbReader = new TestDbReader
+        val dbWriter = new TestDbWriter
+        val login    = LiveLogin.make(verifier, dbReader, dbWriter)
+        login
+          .login(googleTokenString)
+          .attempt
+          .map {
+            case Left(err) => assert(err == GoogleTokenVerificationError("test"))
+            case Right(_)  => fail("expected google verification failure")
+          }
+      }
     }
   }
 }
