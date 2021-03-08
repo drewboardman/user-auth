@@ -46,5 +46,6 @@ final class LiveLogin[F[_]: Functor: MonadThrow] private (
       googleUserId <- tokenVerifier.getGoogleUserId(payload)
       email <- tokenVerifier.getEmail(payload)
       // TODO: check the header for jwk also
+      // TODO: check the header for iss also
     } yield (googleUserId, email)
 }

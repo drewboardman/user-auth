@@ -16,10 +16,10 @@ this session information via the JWT.
 
 TODO
 ----
-* add http4s and routes
-  - login
+* add refresh token stuff
 * need to add encrypted client identifier and decryption
   - this is used to verify google oauth tokens
+  - i don't think it can be encrypted on the client though
 * sessions
   - use a jwt and just exchange it with every authed request
 * github actions

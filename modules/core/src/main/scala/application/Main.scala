@@ -30,7 +30,7 @@ object Main extends IOApp {
             .serve
             .compile
             .drain
-            .as(ExitCode.Success) // maybe needs to be map?
+            .as(ExitCode.Success)
         }
     }
 }
