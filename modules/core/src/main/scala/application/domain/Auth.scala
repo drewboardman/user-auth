@@ -1,15 +1,27 @@
 package application.domain
 
+import ciris.Secret
+import eu.timepit.refined.types.string.NonEmptyString
 import io.estatico.newtype.macros.newtype
 
 import java.util.UUID
+import scala.concurrent.duration.FiniteDuration
 import scala.util.control.NoStackTrace
 
 object Auth {
+  @newtype case class RefreshToken(value: UUID)
   @newtype case class UserId(value: UUID)
   @newtype case class GoogleUserId(value: String) // the return of getSubject
   @newtype case class UserName(value: String)
   @newtype case class Email(value: String)
+  @newtype case class TokenExpiration(value: FiniteDuration)
+  @newtype case class JwtSecretKeyConfig(value: Secret[NonEmptyString])
+  @newtype case class JwtClaimConfig(value: Secret[NonEmptyString])
+
+  case class Session(
+      refreshToken: RefreshToken,
+      userId: UserId
+  )
 
   case class LoginUser(
       userId: UserId,

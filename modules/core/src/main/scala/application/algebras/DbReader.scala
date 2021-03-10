@@ -1,6 +1,6 @@
 package application.algebras
 
-import application.domain.Auth.{ GoogleUserId, LoginUser }
+import application.domain.Auth.{ GoogleUserId, LoginUser, RefreshToken }
 import application.util.sharedcodecs.loginUserCodec
 import application.util.skunkx._
 import cats.effect.{ Resource, Sync }
@@ -10,6 +10,7 @@ import skunk.implicits._
 
 trait DbReader[F[_]] {
   def getUserByGoogleUserId(googleUserId: GoogleUserId): F[Option[LoginUser]]
+  def getUserByRefreshToken(refreshToken: RefreshToken): F[Option[LoginUser]]
 }
 
 object LiveDbReader {
@@ -26,9 +27,26 @@ final class LiveDbReader[F[_]: Sync] private (
         prepared.option(googleUserId)
       }
     }
+
+  override def getUserByRefreshToken(refreshToken: RefreshToken): F[Option[LoginUser]] =
+    sessionPool.use { session =>
+      session.prepare(selectUserByRefreshToken).use { prepared =>
+        prepared.option(refreshToken)
+      }
+    }
 }
 
 private object DbReaderQueries {
+  val selectUserByRefreshToken: Query[RefreshToken, LoginUser] = sql"""
+         SELECT
+         u.user_id,
+         u.google_user_id,
+         u.email
+         FROM sessions s
+         JOIN users u on u.user_id = s.user_id
+         WHERE token_id = ${uuid.cimap[RefreshToken]};
+       """.query(loginUserCodec)
+
   val selectUserByGoogleUserId: Query[GoogleUserId, LoginUser] = sql"""
          SELECT * FROM users
          WHERE google_user_id = ${varchar.cimap[GoogleUserId]};

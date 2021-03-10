@@ -9,6 +9,7 @@ import cats.implicits._
 trait Login[F[_]] {
   def login(rawToken: GoogleTokenString): F[LoginResult]
   def create(rawToken: GoogleTokenString): F[LoginResult]
+  def addSessionToken(loginUser: LoginUser): F[RefreshToken]
 }
 
 object LiveLogin {

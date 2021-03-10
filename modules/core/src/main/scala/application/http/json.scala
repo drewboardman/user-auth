@@ -1,8 +1,11 @@
 package application.http
 
+import application.domain.Auth.LoginUser
 import application.domain.GoogleTokenAuthModels.GoogleTokenString
 import cats.Applicative
+import dev.profunktor.auth.jwt.JwtToken
 import io.circe._
+import io.circe.generic.semiauto.deriveCodec
 import io.estatico.newtype.Coercible
 import io.estatico.newtype.ops._
 import org.http4s.EntityEncoder
@@ -27,4 +30,10 @@ private[http] trait JsonCodecs {
 
   implicit val googleTokenStringCodec: Codec[GoogleTokenString] =
     Codec.forProduct1(nameA0 = "google_id_token")(GoogleTokenString.apply)(_.value)
+
+  // we are only encoding because the JwtMiddleware decodes it with scala-jwt library
+  implicit val tokenEncoder: Encoder[JwtToken] =
+    Encoder.forProduct1("access_token")(_.value)
+
+  implicit val loginUserCodec: Codec[LoginUser] = deriveCodec[LoginUser]
 }

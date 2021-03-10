@@ -1,6 +1,7 @@
 package application.http
 
-import application.algebras.Login
+import application.algebras.{ DbReader, DbWriter, Login }
+import application.domain.{ CookieService, JwtWriter }
 import application.http.routes.auth.LoginRoutes
 import application.http.routes.version
 import cats.effect.{ Concurrent, Timer }
@@ -12,13 +13,36 @@ import org.http4s.server.middleware.{ AutoSlash, CORS, RequestLogger, ResponseLo
 import scala.concurrent.duration.DurationInt
 
 object HttpApi {
-  def make[F[_]: Concurrent: Timer](login: Login[F]) = new HttpApi[F](login)
+  def make[F[_]: Concurrent: Timer](
+      login: Login[F],
+      dbReader: DbReader[F],
+      dbWriter: DbWriter[F],
+      cookieService: CookieService[F],
+      jwtWriter: JwtWriter[F]
+  ) =
+    new HttpApi[F](
+      login,
+      dbReader,
+      dbWriter,
+      cookieService,
+      jwtWriter
+    )
 }
 
 final class HttpApi[F[_]: Concurrent: Timer] private (
-    login: Login[F]
+    login: Login[F],
+    dbReader: DbReader[F],
+    dbWriter: DbWriter[F],
+    cookieService: CookieService[F],
+    jwtWriter: JwtWriter[F]
 ) {
-  private val loginRoutes = new LoginRoutes[F](login).routes
+  private val loginRoutes = new LoginRoutes[F](
+    login,
+    dbReader,
+    dbWriter,
+    cookieService,
+    jwtWriter
+  ).routes
 
   private val openRoutes = loginRoutes
 
