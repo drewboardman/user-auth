@@ -50,6 +50,19 @@ final class LoginRoutes[F[_]: Defer: JsonDecoder: MonadThrow](
           case GoogleTokenVerificationError(_) => Forbidden()
           case GoogleUserIdAlreadyExists(_)    => Conflict()
         }
+
+    // If the user has a refresh token, return a new JWT. Otherwise 403.
+    case r@(POST -> Root / "api" / "v1" / "refresh-token") =>
+      cookies.findSessionToken(r).flatMap {
+        case None => Forbidden("Not logged in.")
+        case Some(tok) =>
+          dbPool.use { db =>
+            db.findUserFromToken(tok).flatMap {
+              case None    => Forbidden("Invalid session token.")
+              case Some(u) => jwtWriter.newJwt(u).flatMap(Ok(_))
+            }
+          }
+      }
   }
 
   val routes: HttpRoutes[F] = Router(

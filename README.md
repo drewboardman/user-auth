@@ -14,6 +14,18 @@ information. We are using JWTs for sessions, signing them, and applying that
 token to the headers of the login response. All authed routes will/should verify
 this session information via the JWT.
 
+Some notes about JWTs and handling sessions
+-------------------------------------------
+* JWTs are signed by the server, so that their validity is ensured
+* They have three parts, encoded and `.` delimited
+  1. Header - contains encryption alg used to sign
+  2. Payload/Claim - any data you want to transfer
+  3. Signature
+* JWTs can be stolen/intercepted, which devalues this signature as the only
+  method of verification
+  - you can partially solve this by keeping exiry low (~15 minutes)
+  - also don't store JWTs on the client-side (use refresh tokens)
+
 TODO
 ----
 * add refresh token stuff
