@@ -21,15 +21,14 @@ object Main extends IOApp {
       val ex = ExecutionContext.global
       Logger[IO].info(s"Loaded config $cfg") >>
         AppResources.make[IO](cfg).use { resources =>
-          val verifier  = LiveGoogleVerificationWrapper.make[IO]
-          val dbReader  = LiveDbReader.make[IO](resources.psql)
-          val dbWriter  = LiveDbWriter.make[IO](resources.psql)
-          val jwtWriter = LiveJwtWriter.make[IO]
-          val cookies   = CookieService[IO](cfg.cookieConfig.domain, cfg.cookieConfig.scheme === Scheme.https)
-          val login     = LiveLogin.make[IO](verifier, dbReader, dbWriter)
-          val api       = HttpApi.make[IO](login, dbReader, dbWriter, cookies, jwtWriter)
-
           for {
+            jwtWriter <- LiveJwtWriter.make[IO](cfg.jwtSecretKeyConfig, cfg.tokenExpiration)
+            verifier = LiveGoogleVerificationWrapper.make[IO]
+            dbReader = LiveDbReader.make[IO](resources.psql)
+            dbWriter = LiveDbWriter.make[IO](resources.psql)
+            cookies  = CookieService[IO](cfg.cookieConfig.domain, cfg.cookieConfig.scheme === Scheme.https)
+            login    = LiveLogin.make[IO](verifier, dbReader, dbWriter)
+            api      = HttpApi.make[IO](login, dbReader, dbWriter, cookies, jwtWriter)
             _ <- migrations.migrateDatabase[IO](cfg.postgreSQL)
             _ <- BlazeServerBuilder[IO](ex)
                    .bindHttp(cfg.httpServerConfig.port.value, cfg.httpServerConfig.host.value)

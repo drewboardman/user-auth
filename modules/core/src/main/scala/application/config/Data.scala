@@ -1,5 +1,6 @@
 package application.config
 
+import application.domain.Auth.{ JwtSecretKeyConfig, TokenExpiration }
 import eu.timepit.refined.types.all.{ PosInt, UserPortNumber }
 import eu.timepit.refined.types.string.NonEmptyString
 import io.estatico.newtype.macros.newtype
@@ -13,7 +14,9 @@ object Data {
   case class AppConfig(
       postgreSQL: PostgreSQLConfig,
       httpServerConfig: HttpServerConfig,
-      cookieConfig: CookieConfig
+      cookieConfig: CookieConfig,
+      jwtSecretKeyConfig: JwtSecretKeyConfig,
+      tokenExpiration: TokenExpiration
   )
 
   case class CookieConfig(

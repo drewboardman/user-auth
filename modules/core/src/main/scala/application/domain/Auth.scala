@@ -16,12 +16,6 @@ object Auth {
   @newtype case class Email(value: String)
   @newtype case class TokenExpiration(value: FiniteDuration)
   @newtype case class JwtSecretKeyConfig(value: Secret[NonEmptyString])
-  @newtype case class JwtClaimConfig(value: Secret[NonEmptyString])
-
-  case class Session(
-      refreshToken: RefreshToken,
-      userId: UserId
-  )
 
   case class LoginUser(
       userId: UserId,
