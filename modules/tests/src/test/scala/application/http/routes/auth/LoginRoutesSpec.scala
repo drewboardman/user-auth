@@ -36,9 +36,14 @@ class LoginRoutesSpec extends HttpTestSuite {
       override def create(loginUser: LoginUser): IO[JwtToken] = IO.pure(jwt)
     }
 
-  def dataCookies(refreshToken: RefreshToken): TestCookies =
+  def dataCookiesSessionToken(refreshToken: RefreshToken): TestCookies =
     new TestCookies {
       override def findSessionToken(req: Request[IO]): IO[Option[RefreshToken]] = IO.pure(Some(refreshToken))
+    }
+
+  def dataCookies(responseCookie: ResponseCookie): TestCookies =
+    new TestCookies {
+      override def sessionCookie(token: RefreshToken): IO[ResponseCookie] = IO.pure(responseCookie)
     }
 
   val verificationFailed: TestLogin = new TestLogin {
@@ -78,17 +83,26 @@ class LoginRoutesSpec extends HttpTestSuite {
   }
 
   test("POST create [Ok]") {
-    forAll { (loginUser: LoginUser, googleTokenString: GoogleTokenString, token: RefreshToken) =>
-      IOAssertion {
-        val request: Request[IO] = Request[IO](method = POST, uri = uri"/auth/createUser").withEntity(googleTokenString)
-        val login                = dataLogin(UserCreated(loginUser))
-        val reader               = new TestDbReader
-        val writer               = dataWriter(token)
-        val cookies              = new TestCookies
-        val jwt                  = new TestJwtWriter
-        val routes               = new LoginRoutes[IO](login, reader, writer, cookies, jwt).routes
-        assertHttpStatus(routes, request)(Status.Created) // change to assert body and cookie
-      }
+    forAll {
+      (
+          loginUser: LoginUser,
+          googleTokenString: GoogleTokenString,
+          token: RefreshToken,
+          jwtToken: JwtToken,
+          cookie: ResponseCookie
+      ) =>
+        IOAssertion {
+          val request: Request[IO] =
+            Request[IO](method = POST, uri = uri"/auth/createUser").withEntity(googleTokenString)
+          val login                = dataLogin(UserCreated(loginUser))
+          val reader               = new TestDbReader
+          val writer               = dataWriter(token)
+          val cookies              = dataCookies(cookie)
+          val jwt                  = dataJwt(jwtToken)
+          val routes               = new LoginRoutes[IO](login, reader, writer, cookies, jwt).routes
+          assertHttp[JwtToken](routes, request)(Status.Created, jwtToken)
+          assertCookie(routes, request)(cookie)
+        }
     }
   }
 
@@ -116,7 +130,7 @@ class LoginRoutesSpec extends HttpTestSuite {
         val login                = new TestLogin
         val reader               = dataReader(loginUser)
         val writer               = new TestDbWriter
-        val cookies              = dataCookies(refreshToken)
+        val cookies              = dataCookiesSessionToken(refreshToken)
         val jwt                  = dataJwt(jwtToken)
         val routes               = new LoginRoutes[IO](login, reader, writer, cookies, jwt).routes
         assertHttp[JwtToken](routes, request)(Status.Ok, jwtToken)

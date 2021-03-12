@@ -7,6 +7,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload
 import com.google.api.client.json.webtoken.JsonWebSignature.Header
 import io.estatico.newtype.Coercible
 import io.estatico.newtype.ops._
+import org.http4s.ResponseCookie
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 
@@ -42,6 +43,12 @@ object generators {
     googleUserId <- Gen.resize(25, coerceGenStringyInt[GoogleUserId])
     email <- coerceGenStr[Email]
   } yield LoginUser(userId, googleUserId, email)
+
+  //-------------- http --------------------------
+  val cookieGen: Gen[ResponseCookie] = for {
+    name <- genNonEmptyString
+    content <- genNonEmptyString
+  } yield ResponseCookie(name, content)
 
   //---------------- google ----------------------
   val googleTokenStringGen: Gen[GoogleTokenString] =

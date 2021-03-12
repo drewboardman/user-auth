@@ -4,7 +4,7 @@ import cats.effect.IO
 import io.circe.Encoder
 import io.circe.syntax.EncoderOps
 import org.http4s.circe._
-import org.http4s.{ HttpRoutes, Request, Status }
+import org.http4s.{ HttpRoutes, Request, ResponseCookie, Status }
 import org.scalatest.Assertion
 
 import scala.util.control.NoStackTrace
@@ -26,6 +26,20 @@ trait HttpTestSuite extends PureTestSuite {
         }
       case None           => fail("route not found")
     }
+
+  def assertCookie(routes: HttpRoutes[IO], request: Request[IO])(
+      expectedCookie: ResponseCookie
+  ): IO[Assertion] =
+    routes
+      .run(request)
+      .value
+      .map(s => s.flatMap(a => a.cookies.headOption))
+      .map {
+        case Some(cookie) =>
+          assert(cookie.name == expectedCookie.name)
+          assert(cookie.content == expectedCookie.content)
+        case None         => fail("route not found")
+      }
 
   def assertHttpStatus(routes: HttpRoutes[IO], req: Request[IO])(expectedStatus: Status): IO[Assertion] =
     routes.run(req).value.map {

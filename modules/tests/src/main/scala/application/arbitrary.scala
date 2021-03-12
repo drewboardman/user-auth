@@ -7,6 +7,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
 import dev.profunktor.auth.jwt.JwtToken
 import io.estatico.newtype.Coercible
 import io.estatico.newtype.ops._
+import org.http4s.ResponseCookie
 import org.scalacheck.{ Arbitrary, Gen }
 
 import java.util.UUID
@@ -23,4 +24,5 @@ object arbitrary {
   implicit val arbGoogleUserId: Arbitrary[GoogleUserId]           =
     Arbitrary(Gen.resize(25, coerceGenStringyInt[GoogleUserId]))
   implicit val arbJwt: Arbitrary[JwtToken]                        = Arbitrary(genNonEmptyString.map(JwtToken))
+  implicit val arbResponseCookie: Arbitrary[ResponseCookie]       = Arbitrary(cookieGen)
 }
