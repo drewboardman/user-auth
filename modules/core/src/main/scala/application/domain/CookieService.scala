@@ -21,19 +21,6 @@ trait CookieReader[F[_]] {
     * not a valid SessionToken an error will be raised in `F`.
     */
   def findSessionToken(req: Request[F]): F[Option[RefreshToken]]
-
-  /** Find the session cookie in `req`, if any. */
-  def findCookie(res: Response[F]): F[Option[ResponseCookie]]
-
-  def getCookie(res: Response[F]): F[ResponseCookie]
-
-  /** Find the session cookie in `res`, if any, and decode it as a SessionToken. If the cookie's content is
-    * not a valid SessionToken an error will be raised in `F`.
-    */
-  def findSessionToken(res: Response[F]): F[Option[RefreshToken]]
-
-  def getSessionToken(res: Response[F]): F[RefreshToken]
-
 }
 
 object CookieReader {
@@ -42,27 +29,11 @@ object CookieReader {
 
   def apply[F[_]: MonadError[*[_], Throwable]]: CookieReader[F] =
     new CookieReader[F] {
-
-      def findCookie(req: Request[F]): F[Option[RequestCookie]] = req.cookies.find(_.name == CookieName).pure[F]
-
-      def getCookie(res: Response[F]): F[ResponseCookie] =
-        findCookie(res).flatMap(_.toRight(new RuntimeException(s"Missing cookie.")).liftTo[F])
-
+      def findCookie(req: Request[F]): F[Option[RequestCookie]]      = req.cookies.find(_.name == CookieName).pure[F]
       def findSessionToken(req: Request[F]): F[Option[RefreshToken]] =
         OptionT(findCookie(req)).semiflatMap { c =>
           Either.catchOnly[IllegalArgumentException](RefreshToken(UUID.fromString(c.content))).liftTo[F]
         }.value
-
-      def findCookie(res: Response[F]): F[Option[ResponseCookie]] = res.cookies.find(_.name == CookieName).pure[F]
-
-      def findSessionToken(res: Response[F]): F[Option[RefreshToken]] =
-        OptionT(findCookie(res)).semiflatMap { c =>
-          Either.catchOnly[IllegalArgumentException](RefreshToken(UUID.fromString(c.content))).liftTo[F]
-        }.value
-
-      def getSessionToken(res: Response[F]): F[RefreshToken] =
-        findSessionToken(res).flatMap(_.toRight(new RuntimeException(s"Missing or invalid session token.")).liftTo[F])
-
     }
 }
 
@@ -119,15 +90,11 @@ object CookieService {
       secure: Boolean
   ): CookieService[F] =
     new CookieService[F] {
-      val reader                                                      = CookieReader[F]
-      val writer                                                      = CookieWriter[F](domain, secure)
-      def findCookie(req: Request[F]): F[Option[RequestCookie]]       = reader.findCookie(req)
-      def getCookie(res: Response[F]): F[ResponseCookie]              = reader.getCookie(res)
-      def findSessionToken(req: Request[F]): F[Option[RefreshToken]]  = reader.findSessionToken(req)
-      def findCookie(res: Response[F]): F[Option[ResponseCookie]]     = reader.findCookie(res)
-      def findSessionToken(res: Response[F]): F[Option[RefreshToken]] = reader.findSessionToken(res)
-      def sessionCookie(token: RefreshToken): F[ResponseCookie]       = writer.sessionCookie(token)
-      def getSessionToken(res: Response[F]): F[RefreshToken]          = reader.getSessionToken(res)
-      def removeCookie(res: Response[F]): F[Response[F]]              = writer.removeCookie(res)
+      val reader                                                     = CookieReader[F]
+      val writer                                                     = CookieWriter[F](domain, secure)
+      def findCookie(req: Request[F]): F[Option[RequestCookie]]      = reader.findCookie(req)
+      def findSessionToken(req: Request[F]): F[Option[RefreshToken]] = reader.findSessionToken(req)
+      def sessionCookie(token: RefreshToken): F[ResponseCookie]      = writer.sessionCookie(token)
+      def removeCookie(res: Response[F]): F[Response[F]]             = writer.removeCookie(res)
     }
 }

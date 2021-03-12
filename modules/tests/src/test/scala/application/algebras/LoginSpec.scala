@@ -9,7 +9,7 @@ import cats.effect.IO
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload
 
-class LiveLoginTest extends PureTestSuite {
+class LoginSpec extends PureTestSuite {
   def dataGoogleVerification(
       googleIdToken: GoogleIdToken,
       email: Email,
@@ -187,8 +187,11 @@ protected class TestGoogleVerification extends GoogleVerificationWrapper[IO] {
 
 protected class TestDbReader extends DbReader[IO] {
   def getUserByGoogleUserId(googleUserId: GoogleUserId): IO[Option[LoginUser]] = IO.pure(None)
+
+  def getUserByRefreshToken(refreshToken: RefreshToken): IO[Option[LoginUser]] = IO.pure(None)
 }
 
 protected class TestDbWriter extends DbWriter[IO] {
   def createNewUser(googleUserId: GoogleUserId, email: Email): IO[LoginResult] = ???
+  def createSession(loginUser: LoginUser): IO[RefreshToken]                    = ???
 }

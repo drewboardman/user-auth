@@ -4,6 +4,7 @@ import application.domain.Auth.{ Email, GoogleUserId, LoginUser }
 import application.domain.GoogleTokenAuthModels.GoogleTokenString
 import application.generators._
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
+import dev.profunktor.auth.jwt.JwtToken
 import io.estatico.newtype.Coercible
 import io.estatico.newtype.ops._
 import org.scalacheck.{ Arbitrary, Gen }
@@ -21,4 +22,5 @@ object arbitrary {
   implicit val arbEmail: Arbitrary[Email]                         = Arbitrary(coerceGenStr[Email])
   implicit val arbGoogleUserId: Arbitrary[GoogleUserId]           =
     Arbitrary(Gen.resize(25, coerceGenStringyInt[GoogleUserId]))
+  implicit val arbJwt: Arbitrary[JwtToken]                        = Arbitrary(genNonEmptyString.map(JwtToken))
 }
