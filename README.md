@@ -28,13 +28,6 @@ Some notes about JWTs and handling sessions
 
 TODO
 ----
-* add refresh token stuff
-* add extra user table columns?
-* need to add encrypted client identifier and decryption
-  - this is used to verify google oauth tokens
-  - i don't think it can be encrypted on the client though
-* sessions
-  - use a jwt and just exchange it with every authed request
 * github actions
 * allow users to create usernames that are distinct from their google email
 * implement google security alerts: https://developers.google.com/identity/protocols/risc
