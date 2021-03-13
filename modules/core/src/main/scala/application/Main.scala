@@ -23,7 +23,7 @@ object Main extends IOApp {
         AppResources.make[IO](cfg).use { resources =>
           for {
             jwtWriter <- LiveJwtWriter.make[IO](cfg.jwtSecretKeyConfig, cfg.tokenExpiration)
-            verifier = LiveGoogleVerificationWrapper.make[IO]
+            verifier = LiveGoogleVerificationWrapper.make[IO](cfg.clientId)
             dbReader = LiveDbReader.make[IO](resources.psql)
             dbWriter = LiveDbWriter.make[IO](resources.psql)
             cookies  = CookieService[IO](cfg.cookieConfig.domain, cfg.cookieConfig.scheme === Scheme.https)

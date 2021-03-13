@@ -1,6 +1,6 @@
 package application.config
 
-import application.config.Data.{ AppConfig, CookieConfig, CookieDomain, HttpServerConfig, PostgreSQLConfig }
+import application.config.Data.{ AppConfig, ClientId, CookieConfig, CookieDomain, HttpServerConfig, PostgreSQLConfig }
 import application.domain.Auth.{ JwtSecretKeyConfig, TokenExpiration }
 import cats.effect._
 import cats.syntax.all._
@@ -36,14 +36,17 @@ object loader {
         NonEmptyString.unsafeFrom("Mj8%fJAJ&jMRHUa&%#ew9yym32tX!klqamprF8oBfHBerQe7x6qeJL%zxfDU9vnO")
       )
       .secret,
-    env("JWT_EXPIRATION").as[Int].default(15)
-  ).parMapN { (psqlHost, psqlPort, user, pass, db, max, serverHost, serverPort, domain, scheme, secret, exp) =>
-    AppConfig(
-      PostgreSQLConfig(psqlHost, psqlPort, user, pass, db, max),
-      HttpServerConfig(serverHost, serverPort),
-      CookieConfig(CookieDomain(domain), Scheme.unsafeFromString(scheme)), // TODO: fix scheme stuff
-      JwtSecretKeyConfig(secret),
-      TokenExpiration(exp.minutes)
-    )
+    env("JWT_EXPIRATION").as[Int].default(15),
+    env("CLIENT_ID").as[NonEmptyString].default(NonEmptyString.unsafeFrom("12345"))
+  ).parMapN {
+    (psqlHost, psqlPort, user, pass, db, max, serverHost, serverPort, domain, scheme, secret, exp, clientId) =>
+      AppConfig(
+        PostgreSQLConfig(psqlHost, psqlPort, user, pass, db, max),
+        HttpServerConfig(serverHost, serverPort),
+        CookieConfig(CookieDomain(domain), Scheme.unsafeFromString(scheme)), // TODO: fix scheme stuff
+        JwtSecretKeyConfig(secret),
+        TokenExpiration(exp.minutes),
+        ClientId(clientId)
+      )
   }
 }

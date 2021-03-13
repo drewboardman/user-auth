@@ -1,5 +1,6 @@
 package application.algebras
 
+import application.config.Data.ClientId
 import application.domain.Auth.{ Email, GoogleTokenVerificationError, GoogleUserId }
 import application.domain.GoogleTokenAuthModels.GoogleTokenString
 import application.effects.CommonEffects.MonadThrow
@@ -18,16 +19,18 @@ trait GoogleVerificationWrapper[F[_]] {
 }
 
 object LiveGoogleVerificationWrapper {
-  def make[F[_]: MonadThrow] = new LiveGoogleVerificationWrapper[F]
+  def make[F[_]: MonadThrow](clientId: ClientId) = new LiveGoogleVerificationWrapper[F](clientId)
 }
 
 // TODO: add the audience list (as secret) to config and use that to verify
-final class LiveGoogleVerificationWrapper[F[_]: MonadThrow] extends GoogleVerificationWrapper[F] {
+final class LiveGoogleVerificationWrapper[F[_]: MonadThrow] private (
+    clientId: ClientId
+) extends GoogleVerificationWrapper[F] {
   private val builder = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), GsonFactory.getDefaultInstance)
 
   private val tokenVerifier: GoogleIdTokenVerifier =
     builder
-      .setAudience(List("foo").asJava) // this should be encrypted
+      .setAudience(List(clientId.value.value).asJava)
       .build()
 
   override def verify(idToken: GoogleTokenString): F[GoogleIdToken] = {

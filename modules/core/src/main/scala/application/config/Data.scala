@@ -10,13 +10,15 @@ object Data {
   @newtype case class RedisURI(value: NonEmptyString)
   @newtype case class RedisConfig(uri: RedisURI)
   @newtype case class CookieDomain(value: NonEmptyString)
+  @newtype case class ClientId(value: NonEmptyString)
 
   case class AppConfig(
       postgreSQL: PostgreSQLConfig,
       httpServerConfig: HttpServerConfig,
       cookieConfig: CookieConfig,
       jwtSecretKeyConfig: JwtSecretKeyConfig,
-      tokenExpiration: TokenExpiration
+      tokenExpiration: TokenExpiration,
+      clientId: ClientId
   )
 
   case class CookieConfig(
