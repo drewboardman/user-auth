@@ -54,17 +54,25 @@ class LoginRoutesSpec extends HttpTestSuite {
   }
 
   test("POST login [Ok]") {
-    forAll { (loginUser: LoginUser, googleTokenString: GoogleTokenString, token: RefreshToken) =>
-      IOAssertion {
-        val request: Request[IO] = Request[IO](method = POST, uri = uri"/auth/login").withEntity(googleTokenString)
-        val login                = dataLogin(SuccessfulLogin(loginUser))
-        val reader               = new TestDbReader
-        val writer               = dataWriter(token)
-        val cookies              = new TestCookies
-        val jwt                  = new TestJwtWriter
-        val routes               = new LoginRoutes[IO](login, reader, writer, cookies, jwt).routes
-        assertHttpStatus(routes, request)(Status.Ok)
-      }
+    forAll {
+      (
+          loginUser: LoginUser,
+          googleTokenString: GoogleTokenString,
+          token: RefreshToken,
+          jwtToken: JwtToken,
+          cookie: ResponseCookie
+      ) =>
+        IOAssertion {
+          val request: Request[IO] = Request[IO](method = POST, uri = uri"/auth/login").withEntity(googleTokenString)
+          val login                = dataLogin(SuccessfulLogin(loginUser))
+          val reader               = new TestDbReader
+          val writer               = dataWriter(token)
+          val cookies              = dataCookies(cookie)
+          val jwt                  = dataJwt(jwtToken)
+          val routes               = new LoginRoutes[IO](login, reader, writer, cookies, jwt).routes
+          assertHttp[JwtToken](routes, request)(Status.Ok, jwtToken)
+          assertCookie(routes, request)(cookie)
+        }
     }
   }
 

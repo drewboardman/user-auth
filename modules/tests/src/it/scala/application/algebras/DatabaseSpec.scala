@@ -41,4 +41,20 @@ class DatabaseSpec extends CleanupIntegrationTests with RunMigrations {
       }
     }
   }
+
+  test("creates and reads a session") {
+    forAll(MaxTests) { ( googleUserId: GoogleUserId, email: Email ) =>
+      IOAssertion {
+        val reader = LiveDbReader.make[IO](sessionPool)
+        val writer = LiveDbWriter.make[IO](sessionPool)
+        for {
+          created <- writer.createNewUser(googleUserId, email)
+          token <- writer.createSession(created.user)
+          usr <- reader.getUserByRefreshToken(token)
+        } yield {
+          assert(usr.contains(created.user))
+        }
+      }
+    }
+  }
 }

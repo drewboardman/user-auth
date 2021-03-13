@@ -44,7 +44,7 @@ private object DbReaderQueries {
          u.email
          FROM sessions s
          JOIN users u on u.user_id = s.user_id
-         WHERE token_id = ${uuid.cimap[RefreshToken]};
+         WHERE refresh_token = ${uuid.cimap[RefreshToken]};
        """.query(loginUserCodec)
 
   val selectUserByGoogleUserId: Query[GoogleUserId, LoginUser] = sql"""
