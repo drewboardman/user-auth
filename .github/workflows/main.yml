@@ -15,7 +15,7 @@ jobs:
     - uses: olafurpg/setup-scala@v10
 
     - name: Starting up Postgres
-      run: docker-compose -f modules/tests/src/it/resources/docker-compose.yml up
+      run: docker-compose -f modules/tests/src/it/resources/docker-compose.yml up -d
 
     - name: Tests
       run: sbt -J-Xms4G -J-Xmx4G test it:test
