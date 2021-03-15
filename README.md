@@ -28,7 +28,6 @@ Some notes about JWTs and handling sessions
 
 TODO
 ----
-* github actions
 * allow users to create usernames that are distinct from their google email
 * implement google security alerts: https://developers.google.com/identity/protocols/risc
 * create a client and serve it
